@@ -1,5 +1,5 @@
 const express = require('express');
-const User = require('../models/userSchema')
+const {User,userJoiSchema, userJoiSigninSchema} = require('../models/userSchema')
 const Course = require('../models/courseSchema')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -7,24 +7,21 @@ const jwt = require('jsonwebtoken');
 // User Registered
 
 const userRegister = async (req, res) => {
-    const { name, email, country , langguage, password, confrim_password } = req.body;
-    if (!name || !email || !country || !langguage || !password|| !confrim_password)  
-    {
-        return res.status(422).json({ error: 'Please enter all required fields' });
+    
+    const {error} = userJoiSchema.validate(req.body);
+    if (error){
+      return res.status(404).json({error: error.details[0].message});
     }
     try {
+      const { name, email, country , language, password, confirm_password } = req.body;
         const userExists= await User.findOne({ email: email })
         if (userExists) 
         {
           return res.status(422).json({ error: 'Email already exists' });
         }
-        else if(password!=confrim_password) 
-        {
-          return res.status(422).json({ error: 'Password not matched' });
-        }
         else
         {
-          const user = new User({ name, email, country, langguage, password, confrim_password});
+          const user = new User({ name, email, country, language, password, confirm_password});
           // Encrypt the password befor saved
           await user.save();
           res.status(201).json({ message: 'Successfully created' });
@@ -39,51 +36,57 @@ const userRegister = async (req, res) => {
 
 // User Sign in 
 const userSigin = async (req, res) => {
-    try{
-        const {email, password} = req.body
-        if(!email || !password)
-        {
-          return res.status(400).json({ message: 'Not Empty Fileds'})
-        }
-        const userLogin = await User.findOne({ email : email})
-        // login functionality
-        if(userLogin)
-        {
-          const isMatched= await bcrypt.compare(password,userLogin.password)
-          const token = jwt.sign({ userId: userLogin._id }, 'pakistan009', {
-            expiresIn: '1h' // Token will expire in 1 hour
-           });
-          console.log(token);
-          // Set the token as an HTTP-only cookie
-          res.cookie('jwtToken', token, {
-            maxAge: 3600000, // Token expiration time in milliseconds (1 hour)
-            httpOnly: true,
-          });
-           if(!isMatched){
-            res.status(400).json({message:'Invalid Cranditionals'});
-          }
-          else
+  const {error} = userJoiSigninSchema.validate(req.body);
+  if (error){
+    return res.status(404).json({error: error.details[0].message});
+  }
+    try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Not Empty Fields' });
+    }
+    const userLogin = await User.findOne({ email: email });
+    // login functionality
+    if (userLogin) {
+      const isMatched = await bcrypt.compare(password, userLogin.password);
+      if (!isMatched) {
+        return res.status(400).json({ message: 'Invalid Credentials' });
+      } else {
+        const token = jwt.sign(
+          { userId: userLogin._id, userName: userLogin.name }, // Include user name here
+          'pakistan009',
           {
-            res.json({message:'User Login Successfully'});
+            expiresIn: '1h'
           }
-         
-        } 
-        else{
-          res.status(400).json({message:'Invalid Cranditionals'});
-        }
+        );
         console.log(userLogin);
-       
-        }
-        catch (error) 
-        {
-          console.error(error);
-        }
+        // Set the token as an HTTP-only cookie
+        res.cookie('jwtToken', token, {
+          maxAge: 36000000, // Token expiration time in milliseconds (1 hour)
+          httpOnly: true
+        });
+
+        return res.status(200).json({
+          message: 'User Login Successfully',
+          token: token,
+          userId: userLogin._id,
+          name: userLogin.name // Include the user's name here
+          
+        });
+      }
+    } else {
+      return res.status(400).json({ message: 'Invalid Credentials' });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
 
 // Get All Users
 const getMembers = async (req, res) => {
   let data = await User.find();
-    console.log(data);
+    console.log(data); 
     data.length > 0 ? res.send(data) : res.send("No data");
 };
 
@@ -107,11 +110,18 @@ const updateSingleMember = async (req, res) => {
     { $set: req.body }
   );
       res.send(result);
+  // let result = await Products.findOne({ _id: req.params.id });
+  // res.send(result);
 };
 
 
 // get Single Product Update
 const getSingleMember = async (req, res) => {
+  // let result = await Products.updateOne(
+  //   { _id: req.params._id },
+  //   { $set: req.body }
+  // );
+  //     res.send(result);
   let result = await User.findOne({ _id: req.params.id });
   res.send(result);
 };
