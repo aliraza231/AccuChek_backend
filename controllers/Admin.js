@@ -1,16 +1,20 @@
 const express = require('express');
-const Products = require('../models/productSchema');
-const Course = require('../models/courseSchema')
-const admin = require('../models/admin')
+const {Products,productsJoiSchema} = require('../models/productSchema');
+const {Course, courseJoiSchema} = require('../models/courseSchema')
+const {admin, adminJoiSchema} = require('../models/admin')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const app= express();
 
-
-const adminSigin = async (req, res) => {
+const adminSigin = async (req, res) => { 
+  const {error} = adminJoiSchema.validate(req.body);
+  if (error){
+    return res.status(404).json({error: error.details[0].message});
+  }
+  
   try {
     const { email, password } = req.body;
-
+    
     if (!email || !password) {
       return res.status(400).json({ message: 'Not Empty Fields' });
     }
@@ -46,42 +50,47 @@ const adminSigin = async (req, res) => {
 };
 
 
+
+ 
 // admin Register
 const adminRegister = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email  || !password)  
-  {
-      return res.status(422).json({ error: 'Please enter all required fields' });
-  }
-  try {
-      const adminExists= await admin.findOne({ email: email })
-      if (adminExists) 
-      {
-        return res.status(422).json({ error: 'Email already exists' });
-      }
-      else
-      {
-        const adminC = new admin({ email, password,});
-        // Encrypt the password befor saved
-        await adminC.save();
-        res.status(201).json({ message: 'Successfully admin created' });
-      }
-    } 
-    catch (error) 
-    {
-      console.error(error); // Log the error for debugging
-      res.status(500).json({ error: 'Something went wrong' });
-    };
+  // const {error} = adminJoiSchema.validate(req.body);
+  // if (error){
+  //   return res.status(404).json({error: error.details[0].message});
+  // }
+  // try {
+  //     const adminExists= await admin.findOne({ email: email })
+  //     if (adminExists) 
+  //     {
+  //       return res.status(422).json({ error: 'Email already exists' });
+  //     }
+  //     else
+  //     {
+  //       const adminC = new admin({ email, password,});
+  //       // Encrypt the password befor saved
+  //       await adminC.save();
+  //       res.status(201).json({ message: 'Successfully admin created' });
+  //     }
+  //   } 
+  //   catch (error) 
+  //   {
+  //     console.error(error); // Log the error for debugging
+  //     res.status(500).json({ error: 'Something went wrong' });
+  //   };
 };
 
 
 // use this controler for multer to handle images/vedios i will combine into old
 const addCources = async (req, res) => {
-  const { name, id, discription, points, status, duration, url } = req.body;
-  if (!name || !id || !discription || !points || !status || !duration || !url) 
-  {
-      return res.status(422).json({ error: 'Please enter all required fields' });
+  const {error} = courseJoiSchema.validate(req.body);
+  if (error){
+    return res.status(404).json({error: error.details[0].message});
   }
+  // const { name, id, discription, points, status, duration, url } = req.body;
+  // if (!name || !id || !discription || !points || !status || !duration || !url) 
+  // {
+  //     return res.status(422).json({ error: 'Please enter all required fields' });
+  // }
   try {
     const { name, id, discription, points, status, duration, url } = req.body;
     const courseExict= await Course.findOne({ id : id })
@@ -117,16 +126,13 @@ const addCources = async (req, res) => {
 };
 
 
-
-
 // Add product Images in db
 const addProduct = async (req, res) => {
-  const { title, id, description, points,category } = req.body;
-
-  if (!title || !id || !description || !points || !category ) {
-           // Unprocessable Entity 
-          return res.status(422).json({ error: 'Please enter all required fields of products' });
-    }
+  
+  const {error} = productsJoiSchema.validate(req.body);
+  if (error){
+    return res.status(404).json({error: error.details[0].message});
+  }
   
   try {
         const { title, id, description, points,category } = req.body;
@@ -145,7 +151,7 @@ const addProduct = async (req, res) => {
                     description,
                     points,
                     category,
-                    image,
+                    // image,
                   });
                   // Return true if product add return fale if not sucessfull
                   console.log(newProducts instanceof Products); 
@@ -184,30 +190,6 @@ const dellProduct = async (req, res) => {
     }
 };
 
-// Add Product in DB
-// const addProduct = async (req, res) => {
-//     const { title, id, description, points } = req.body;
-//     if (!title || !id || !description || !points) {
-//       return res.status(422).json({ error: 'Please enter all required fields of products' });
-//      }
-    
-//       try {
-//         const productExict= await Products.findOne({ id:id })
-  
-//         if (productExict) {
-//           return res.status(422).json({ error: 'Product id already exists' });
-//         }else{
-//           const product = new Products({ title, id, description, points });
-//           await product.save();
-//           res.status(201).json({ message: 'Successfully Product Inserted' });
-//         }
-        
-//       } catch (error) {
-//         console.error(error); // Log the error for debugging
-//         res.status(500).json({ error: 'Something went wrong' });
-//       };
-// };
-// Update Product
 const updateSingleProduct = async (req, res) => {
   let result = await Products.updateOne(
     { _id: req.params._id },
@@ -233,30 +215,6 @@ const getCources = async (req, res) => {
 };
 
 
-// Add cources into DB
-// const addCources = async (req, res) => {
-//     const { name, id, discription,points, status, duration, url } = req.body;
-    
-//     if (!name || !id || !discription || !points || !status || !duration || !url) {
-//         return res.status(422).json({ error: 'Please enter all required fields' });
-//      }
-//      try {
-//       const courseExict= await Course.findOne({ id : id })
-
-//       if (courseExict) {
-//         return res.status(422).json({ error: 'This course is already exists' });
-//       }else{
-//         const course = new Course({ name, id, discription, points, status, duration, url });
-//         await course.save();
-//         res.status(201).json({ message: 'Successfully Course Created' });
-//       }
-      
-//     } catch (error) {
-//       console.error(error); // Log the error for debugging
-//       res.status(500).json({ error: 'Something went wrong' });
-//     };
-// };
-// Dell Course
 const dellCource = async (req, res) => {
     let dellCoourse = await Course.deleteOne({ _id: req.params._id  });
     if(dellCoourse)
@@ -264,7 +222,7 @@ const dellCource = async (req, res) => {
        res.status(201).json({ message: 'Successfully Course Delete' });
     }
   else{
-        res.status(201).json({ message: 'Error while deleted' });
+        res.status(201).json({ message: 'Cource is not deleted' });
   }
 };
 // Update Cource
@@ -277,5 +235,5 @@ const updateCource = async (req, res) => {
 };
 
 
-module.exports = {getProducts,dellProduct,addProduct,addCources,dellCource,
-                  getCources,getSingleProduct,updateSingleProduct,updateCource,adminSigin,adminRegister}
+
+module.exports = {getProducts,dellProduct,addProduct,addCources,dellCource,getCources,getSingleProduct,updateSingleProduct,updateCource,adminSigin,adminRegister}
