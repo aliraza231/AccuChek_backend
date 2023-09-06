@@ -20,7 +20,7 @@ router.post("/userRegister", upload.single("image"), userRegister);
 
 
 // 
-router.route('/userInfo/:_id').get(userInfo);
+router.route('/userInfo/:_id').put(userInfo);
 
 
 // 

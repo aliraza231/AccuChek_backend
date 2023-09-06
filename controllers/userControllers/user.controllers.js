@@ -23,18 +23,31 @@ const userRegister = async (req, res) => {
     if (userExists) {
       return res.status(422).json({ error: 'This email is already registered' });
     }
+    const points = 0;
+    // function generateOTP() {
+    //   const length = 6; 
+    //   const charset = '0123456789';
+    //   let otp = '';
+    
+    //   for (let i = 0; i < length; i++) {
+    //     const randomIndex = Math.floor(Math.random() * charset.length);
+    //     otp += charset[randomIndex];
+    //   }
+    
+    //   return otp;
+    // }
 
-    const generatedOtp = generateOTP();
-    sendOTPToEmail(email, generatedOtp); 
+    // const generatedOtp = generateOTP();
+    // sendOTPToEmail(email, generatedOtp); 
  
 
-    const storedOtp = ''; 
-    const otpTimestamp = ''; 
+    // const storedOtp = ''; 
+    // const otpTimestamp = ''; 
 
   
-    if (otp !== storedOtp || isOtpExpired(otpTimestamp)) {
-      return res.status(401).json({ error: 'Invalid or expired OTP' });
-    }
+    // if (otp !== storedOtp || isOtpExpired(otpTimestamp)) {
+    //   return res.status(401).json({ error: 'Invalid or expired OTP' });
+    // }
 
     // OTP is correct and valid, proceed with user registration
     const image = req.file.filename;
@@ -45,7 +58,8 @@ const userRegister = async (req, res) => {
       country,
       confirm_password,
       language,
-      image
+      image,
+      points
     });
 
     await newUser.save();
@@ -59,26 +73,26 @@ const userRegister = async (req, res) => {
     res.status(500).json({ error: 'Failed to add user' });
   }
 };
-function isOtpExpired(otpTimestamp) {
-  const currentTimestamp = Date.now();
-  const otpExpirationTime = 5 * 60 * 1000; // OTP expires after 5 minutes (adjust as needed)
+// function isOtpExpired(otpTimestamp) {
+//   const currentTimestamp = Date.now();
+//   const otpExpirationTime = 5 * 60 * 1000; // OTP expires after 5 minutes (adjust as needed)
 
-  return currentTimestamp - otpTimestamp > otpExpirationTime;
-}
+//   return currentTimestamp - otpTimestamp > otpExpirationTime;
+// }
 
 const userRegisterOtp = async(req, res) =>{
-  const { email } = req.body;
+  // const { email } = req.body;
 
-  const otp = generateOTP();
+  // const otp = generateOTP();
 
-  // Send the OTP to the user's email
-  try {
-    await sendOTPToEmail(email, otp);
-    res.status(200).json({ message: 'OTP sent successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
+  // // Send the OTP to the user's email
+  // try {
+  //   await sendOTPToEmail(email, otp);
+  //   res.status(200).json({ message: 'OTP sent successfully' });
+  // } catch (error) {
+  //   console.error(error);
+  //   res.status(500).json({ error: 'Failed to send OTP' });
+  // }
 }
 
 
@@ -115,7 +129,7 @@ const userSigin = async (req, res) => {
         // });
 
         const token = jwt.sign(
-          { userId: userLogin._id, userName: userLogin.name, userImage: userLogin.image },
+          { userId: userLogin._id, userName: userLogin.name, userImage: userLogin.image,userPoints: userLogin.points },
           'pakistan009',
           {
             expiresIn: '1h',
@@ -133,6 +147,7 @@ const userSigin = async (req, res) => {
           userId: userLogin._id,
           name: userLogin.name,
           image: userLogin.image,
+          points:userLogin.points,
         });
       }
     } else {
@@ -147,10 +162,18 @@ const userSigin = async (req, res) => {
 
 
 
-const userInfo= async (req, res) => {
-  let result = await User.findOne({ _id: req.params.id });
-  res.send(result);
-}
+const userInfo = async (req, res) => {
+  try {
+    const result = await User.updateOne(
+      { _id: req.params._id },
+      { $set: req.body }
+    );
+    res.send(result);
+  } catch (error) {
+    console.error("Error while updating user points", error);
+    res.status(500).json({ error: "Failed to update points Server Error" });
+  }
+};
 
 
 
