@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {userRegister, userSigin , getMembers,dellMember,updateSingleMember,getSingleMember,getFalseStausCources,getTrueStausCources, userInfo,userRegisterOtp} = require('../../controllers/userControllers/user.controllers')
+const {userRegister, userSigin , getMembers,dellMember,updateSingleMember,getSingleMember,getFalseStausCources,getTrueStausCources, userInfo,userRegisterOtp,updateCourseStatus,getCourseStatus} = require('../../controllers/userControllers/user.controllers')
 const multer = require('multer');
 // user iamge
 // router.route('/userRegister').post(userRegister);
@@ -10,23 +10,20 @@ const storage = multer.diskStorage({
       cb(null, './uploads');
     },
     filename: function (req, file, cb) {
-      cb(null, `${Date.now()}-${file.originalname}`);
+      cb(null, `${Date.now()}-${file.originalname}`); 
     },
   });
 const upload = multer({ storage });
 router.post("/userRegister", upload.single("image"), userRegister);
 
 // end user image
-
-
-// 
+ 
 router.route('/userInfo/:_id').put(userInfo);
 
 
-// 
-
 router.route('/userSigin').post(userSigin);
-
+router.route('/updateCourseStatus/:_id').put(updateCourseStatus);
+router.route('/getCourseStatus/:id').get(getCourseStatus);
 router.route('/getMembers').get(getMembers);
 router.route('/dellMember/:_id').delete(dellMember);
 

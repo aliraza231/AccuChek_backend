@@ -22,18 +22,11 @@ const get_User_routes=require("./routes/userRoutes/user.route")
 
 app.use(express.json());
 
-const { json } = require('body-parser');
 
 
 app.use('/Admin',get_Admin_routes)
 app.use('/User',get_User_routes)
 const PORT=process.env.PORT
-
-
-app.get("/helohamza",(req, res) => {
-    res.send("HEY MARA")
-})
-
 
 // Running server 
 app.listen(PORT, (req, res)=>{

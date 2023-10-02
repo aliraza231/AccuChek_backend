@@ -242,4 +242,70 @@ const getTrueStausCources = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 }
-module.exports = {userRegister,userSigin,getMembers,dellMember,updateSingleMember,getSingleMember,getFalseStausCources,getTrueStausCources, userInfo,userRegisterOtp}
+
+const updateCourseStatus = async (req, res) => {
+  try { 
+    const result = await Course.updateOne(
+      { _id: req.params._id },
+      { $set: req.body }
+    );
+    res.send(result);
+  }
+  catch (error)
+  {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+// const updateCourseStatus = async (req, res) => {
+//   try { 
+//     const courseId = req.params._id; // Assuming this is the course ID
+//     const { courseId: updatedCourseId, courseStatus: updatedCourseStatus } = req.body;
+    
+//     const result = await User.updateOne(
+//       { 'course._id': courseId },
+//       { $set: { 'course.$.courseId': updatedCourseId, 'course.$.courseStatus': updatedCourseStatus } }
+//     );
+    
+//     res.send(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+
+const getCourseStatus = async(req,res) => {
+  try {
+    const course = await Course.findOne({_id:req.params.id});
+    if (!course) {
+      return res.status(404).send("Course not found");
+    }
+    res.status(200).json({ status: course.status });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+}
+// const getCourseStatus = async (req, res) => {  
+//   try {
+//     const { userId, courseId } = req.params;
+
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).send("User not found");
+//     }
+
+//     const course = user.courses.find(course => course.courseId.equals(courseId));
+//     if (!course) {
+//       return res.status(404).send("Course not found for this user");
+//     }
+
+//     res.status(200).json({ status: course.courseStatus });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+module.exports = {userRegister,userSigin,getMembers,dellMember,updateSingleMember,getSingleMember,getFalseStausCources,getTrueStausCources, userInfo,userRegisterOtp,updateCourseStatus,getCourseStatus}

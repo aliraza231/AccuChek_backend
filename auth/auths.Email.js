@@ -9,12 +9,6 @@ let transporter = nodemailer.createTransport({
 });
 transporter.verify().then(console.log).catch(console.error);
 
-
-
-
-
-
-
  transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {

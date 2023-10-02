@@ -32,6 +32,15 @@ const userSchema = new mongoose.Schema({
   image: {
     type: String,
   },
+  points:{
+    type: Number,
+  },
+  // course:[
+  //   {
+  //     courseId:{type: mongoose.Schema.Types.ObjectId, ref: 'Course'},
+  //     courseStatus:{type:Boolean,default:false}
+  //   }
+  // ],
   tokens: [
     {
       token: {
